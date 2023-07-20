@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Collaborative Drawing</title>
+</head>
+<body>
+  <h1>Collaborative Drawing</h1>
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawPixel(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, 5, 5); // Change 5 to the pixel size
+    }
+
+    // Socket.io setup for real-time updates
+    const socket = io('http://yourserver.com:3000'); // Replace this with your server URL
+
+    socket.on('pixelUpdated', ({ x, y, color }) => {
+      drawPixel(x, y, color);
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+</body>
+</html>
