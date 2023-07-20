@@ -2,6 +2,11 @@
 <html>
 <head>
   <title>Collaborative Drawing</title>
+  <style>
+    #canvas {
+      border: 1px solid black;
+    }
+  </style>
 </head>
 <body>
   <h1>Collaborative Drawing</h1>
@@ -13,16 +18,23 @@
 
     function drawPixel(x, y, color) {
       ctx.fillStyle = color;
-      ctx.fillRect(x, y, 5, 5); // Change 5 to the pixel size
+      ctx.fillRect(x, y, 29, 9); // Change 5 to the pixel size
     }
 
-    // Socket.io setup for real-time updates
-    const socket = io('http://yourserver.com:3000'); // Replace this with your server URL
+    function updateDrawing() {
+      fetch('http://82.64.141.244:3000')
+        .then(response => response.json())
+        .then(pixelData => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          Object.keys(pixelData).forEach(key => {
+            const [x, y] = key.split('-').map(Number);
+            drawPixel(x, y, pixelData[key]);
+          });
+        });
+    }
 
-    socket.on('pixelUpdated', ({ x, y, color }) => {
-      drawPixel(x, y, color);
-    });
+    // Update the drawing periodically to get the latest data from the server
+    setInterval(updateDrawing, 1000); // You can adjust the interval as needed
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
 </body>
 </html>
