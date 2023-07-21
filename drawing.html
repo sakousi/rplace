@@ -11,30 +11,75 @@
 <body>
   <h1>Collaborative Drawing</h1>
   <canvas id="canvas" width="800" height="600"></canvas>
+  <!-- 3 colors btn Black, White, Orange -->
+    <button id="rouge" onclick="setColor('#ff4500')">rouge</button>
+    <button id="orange" onclick="setColor('#ff6600')">Orange</button>
+    <button id="jaune" onclick="setColor('#ffff00')">jaune</button>
+    <button id="vert" onclick="setColor('#008000')">vert</button>
+    <button id="bleu" onclick="setColor('#0000ff')">Bleu</button>
+    <button id="violet" onclick="setColor('#800080')">violet</button>
+    <button id="black" onclick="setColor('#000000')">Black</button>
+    <button id="white" onclick="setColor('#ffffff')">White</button>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    let color = '#000000'; // Change this to the color you want to draw with
+
+    // Draw a pixel at the given x, y coordinates with the given color
+
+    function setColor(newColor) {
+      color = newColor;
+    }
 
     function drawPixel(x, y, color) {
       ctx.fillStyle = color;
-      ctx.fillRect(x, y, 29, 9); // Change 5 to the pixel size
+      ctx.fillRect(x, y, 28, 28); // Change 5 to the pixel size
     }
 
-    function updateDrawing() {
-      fetch('http://82.64.141.244:3000')
+    function updateDrawing(pixelData) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      Object.keys(pixelData).forEach(key => {
+        const [x, y] = key.split('-').map(Number);
+        drawPixel(x, y, pixelData[key]);
+      });
+    }
+
+    function getPixelData() {
+      fetch('http://82.64.141.244:3000/')
         .then(response => response.json())
         .then(pixelData => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          Object.keys(pixelData).forEach(key => {
-            const [x, y] = key.split('-').map(Number);
-            drawPixel(x, y, pixelData[key]);
-          });
+          updateDrawing(pixelData);
+        })
+        .catch(err => {
+          console.error('Error fetching pixel data:', err);
         });
     }
 
     // Update the drawing periodically to get the latest data from the server
-    setInterval(updateDrawing, 1000); // You can adjust the interval as needed
+    setInterval(getPixelData, 1000); // You can adjust the interval as needed
+
+    // Handle user input to draw pixels on the canvas
+    canvas.addEventListener('click', (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((event.clientX - rect.left) / 28) * 28; // Change 5 to the pixel size
+      const y = Math.floor((event.clientY - rect.top) / 28) * 28; // Change 5 to the pixel size
+
+      // Draw locally on the canvas immediately
+      drawPixel(x, y, color);
+
+      // Send the pixel data to the server
+      fetch('http://82.64.141.244:3000/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ x, y, color }),
+      })
+      .catch(err => {
+        console.error('Error sending pixel data:', err);
+      });
+    });
   </script>
 </body>
 </html>
